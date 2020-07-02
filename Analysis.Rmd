@@ -1,0 +1,74 @@
+---
+title: "Analysis of Income by College Major"
+author: "Saif Ul Mehdi"
+date: "02/07/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dependencies
+
+Loading the Dependencies
+
+```{r }
+library(collegeIncome)
+data(college)
+library(dplyr)
+```
+
+## Exploratory Data Analysis
+
+Finding what does the data have
+
+```{r}
+head(college)
+```
+```{r}
+tail(college)
+```
+```{r}
+summary(college)
+```
+Different categories of college majors
+```{r}
+table(college$major_category)
+```
+Interdisciplinary college major will not be helpful in estimation so, we will remove it from the dataset
+```{r}
+college<-college%>%filter(major_category!='Interdisciplinary')
+table(college$major_category)
+```
+## Box Plot
+```{r echo=FALSE}
+par(mar=c(13,4.5,2,0.5))
+boxplot(p25th~major_category,data=college,main='25th percentile',las=2,cex.axis=0.75,xlab='',ylab='')
+boxplot(median~major_category,data=college,main='50th percentile',las=2,cex.axis=0.75,xlab='',ylab='')
+boxplot(p75th~major_category,data=college,main='75th percentile',las=2,cex.axis=0.75,xlab='',ylab='')
+```
+There seems to be no considerable variation across categories for either of these three measures, so we will use median as our outcome measure.
+
+## Linear Regression
+
+Since, the dataset consists of different types of jobs like low paying jobs, jobs which require college degree we would include it in the linear model. We will also include the gender effects also. We will fit the model and draw inferences from it
+```{r}
+fit<-lm(median~major_category+perc_women+perc_college_jobs+perc_low_wage_jobs,college)
+summary(fit)
+```
+Looking at the summary of the fitted models, it is obvious that the categories of majors don't have effect on the median income as the F-statistic. We would gain further inference by drawing diagnostic plots
+
+## Diagnostic Plots
+```{r echo=FALSE}
+resid<-residuals(fit)
+fitted<-fitted.values(fit)
+plot(density(resid),xlab='Residuals',ylab='Density',main='Residual distribution')
+```
+```{r echo=FALSE}
+plot(fitted,resid,xlab='Predicted Values',ylab='Residuals')
+abline(h=0,col='red',lty=2)
+```
+
+We can see from the diagnostic plots that the assumption of residuals being normal is valid and heteroskedasticity is not an issue. There could be a possible outlier.
+Overall, there seems to be no effect of college major category on median income
